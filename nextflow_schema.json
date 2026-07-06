@@ -443,6 +443,13 @@
                     "description": "Turn on the joint germline variant calling for GATK haplotypecaller",
                     "help_text": "Uses all normal germline samples (as designated by `status` in the input csv) in the joint germline variant calling process."
                 },
+                "joint_germline_genomicsdb_update_path": {
+                    "type": "string",
+                    "fa_icon": "fas fa-database",
+                    "format": "directory-path",
+                    "description": "Existing per-interval GenomicsDB workspace root for incremental joint-germline calling.",
+                    "help_text": "When set (and `--joint_germline true`), GATK4_GENOMICSDBIMPORT runs in update mode (`--genomicsdb-update-workspace-path`) instead of create mode, appending the new GVCFs to an existing baseline GenomicsDB. The path must be a directory containing one workspace per scatter interval, named `${intervals_name}.joint` (matching the publish prefix used by GATK4_GENOMICSDBIMPORT). Leave unset for the default create-mode behavior."
+                },
                 "joint_mutect2": {
                     "type": "boolean",
                     "fa_icon": "fas fa-angle-double-right",

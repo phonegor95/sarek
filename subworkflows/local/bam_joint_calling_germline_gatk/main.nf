@@ -33,6 +33,17 @@ workflow BAM_JOINT_CALLING_GERMLINE_GATK {
     main:
     versions = Channel.empty()
 
+    // GenomicsDBImport mode is selected by params.joint_germline_genomicsdb_update_path:
+    //   unset (default)  → create-mode (original behavior): build a fresh per-interval
+    //                      GenomicsDB workspace from the input GVCFs.
+    //   set to a dir     → update-mode: append the input GVCFs into the existing
+    //                      per-interval workspace already at
+    //                      ${joint_germline_genomicsdb_update_path}/${intervals_name}.joint
+    //                      (matching the published prefix used by GATK4_GENOMICSDBIMPORT).
+    //                      One workspace dir per scatter interval is required; the file()
+    //                      check below errors if any are missing.
+    def existing_genomicsdb_root = params.joint_germline_genomicsdb_update_path
+
     // Map input for GenomicsDBImport
     // Rename based on num_intervals, group all samples by their interval_name/interval_file and restructure for channel
     // Group by [0, 3] to avoid a list of metas and make sure that any intervals
@@ -41,13 +52,25 @@ workflow BAM_JOINT_CALLING_GERMLINE_GATK {
         .groupTuple(by:3) //join on interval file
         .map{ meta_list, gvcf, tbi, intervals ->
             // meta is now a list of [meta1, meta2] but they are all the same. So take the first element.
-            [ meta_list[0], gvcf, tbi, intervals, [], [] ]
+            def wspace = existing_genomicsdb_root
+                ? file("${existing_genomicsdb_root}/${meta_list[0].intervals_name}.joint", checkIfExists: true)
+                : []
+            [ meta_list[0], gvcf, tbi, intervals, [], wspace ]
         }
 
-    // Convert all sample vcfs into a genomicsdb workspace using genomicsdbimport
-    GATK4_GENOMICSDBIMPORT(gendb_input, false, false, false)
+    // Convert all sample vcfs into a genomicsdb workspace using genomicsdbimport.
+    // Third positional arg is `run_updatewspace` — flips the underlying gatk
+    // call between `--genomicsdb-workspace-path` (create) and
+    // `--genomicsdb-update-workspace-path` (update); see
+    // modules/nf-core/gatk4/genomicsdbimport/main.nf:30-47.
+    def run_updatewspace = existing_genomicsdb_root ? true : false
+    GATK4_GENOMICSDBIMPORT(gendb_input, false, run_updatewspace, false)
 
-    genotype_input = GATK4_GENOMICSDBIMPORT.out.genomicsdb.map{ meta, genomicsdb -> [ meta, genomicsdb, [], [], [] ] }
+    // In update-mode the module emits the in-place updated workspace via
+    // `out.updatedb`; in create-mode it emits the new workspace via
+    // `out.genomicsdb`. Both feed into GenotypeGVCFs the same way.
+    genomicsdb_for_genotype = run_updatewspace ? GATK4_GENOMICSDBIMPORT.out.updatedb : GATK4_GENOMICSDBIMPORT.out.genomicsdb
+    genotype_input = genomicsdb_for_genotype.map{ meta, genomicsdb -> [ meta, genomicsdb, [], [], [] ] }
 
     // Joint genotyping performed using GenotypeGVCFs
     // Sort vcfs called by interval within each VCF

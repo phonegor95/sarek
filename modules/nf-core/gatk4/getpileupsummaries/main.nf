@@ -4,8 +4,8 @@ process GATK4_GETPILEUPSUMMARIES {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/b2/b28daf5d9bb2f0d129dcad1b7410e0dd8a9b087aaf3ec7ced929b1f57624ad98/data':
-        'community.wave.seqera.io/library/gatk4_gcnvkernel:e48d414933d188cd' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/b1/b1ea8f007358fcd2b5e9e08367ce9386264aadaa4f1a3b1c0ff708239d7bc49d/data':
+        'community.wave.seqera.io/library/gatk4_gcnvkernel:517a5f47aec1bdd8' }"
 
     input:
     tuple val(meta), path(input), path(index), path(intervals)

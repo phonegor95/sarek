@@ -4,8 +4,8 @@ process GATK4_MERGEVCFS {
 
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
-        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ce/ced519873646379e287bc28738bdf88e975edd39a92e7bc6a34bccd37153d9d0/data'
-        : 'community.wave.seqera.io/library/gatk4_gcnvkernel:edb12e4f0bf02cd3'}"
+        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/b1/b1ea8f007358fcd2b5e9e08367ce9386264aadaa4f1a3b1c0ff708239d7bc49d/data'
+        : 'community.wave.seqera.io/library/gatk4_gcnvkernel:517a5f47aec1bdd8'}"
 
     input:
     tuple val(meta), path(vcf)
