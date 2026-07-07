@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- [#755](https://github.com/nf-core/sarek/issues/755) - Add incremental (n+1) joint germline calling: `--joint_germline_genomicsdb_update_path` appends new GVCFs to an existing GenomicsDB instead of rebuilding
 - [#2208](https://github.com/nf-core/sarek/pull/2208) - Add varlociraptor/filterfdr
 
 ### Changed
@@ -32,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Params                              | status |
 | ----------------------------------- | ------ |
+| `--joint_germline_genomicsdb_update_path` | New    |
 | `--varlociraptor_events_germline`   | New    |
 | `--varlociraptor_events_somatic,`   | New    |
 | `--varlociraptor_events_tumor_only` | New    |
