@@ -1,0 +1,62 @@
+nextflow_workflow {
+
+    name "Test Subworkflow BAM_JOINT_CALLING_GERMLINE_GATK"
+    script "../main.nf"
+    workflow "BAM_JOINT_CALLING_GERMLINE_GATK"
+    config "./nextflow.config"
+
+    tag "subworkflows"
+    tag "subworkflows_local"
+    tag "bam_joint_calling_germline_gatk"
+
+    // Create-mode joint germline calling: build a fresh per-interval GenomicsDB from
+    // the input GVCFs and genotype the cohort. This exercises the default
+    // (joint_germline_genomicsdb_update_path unset) branch of the update-mode patch.
+    //
+    // Update-mode (joint_germline_genomicsdb_update_path set) appends new GVCFs onto an
+    // existing GenomicsDB via `--genomicsdb-update-workspace-path`. It is not tested at
+    // the subworkflow level here: the baseline workspace must be supplied through the
+    // `joint_germline_genomicsdb_update_path` *parameter*, but nf-test evaluates the
+    // params{} block before the setup{} block runs, so a setup-produced workspace cannot
+    // be referenced there (and committing a pre-built binary GenomicsDB fixture is not
+    // permitted). Update-mode is instead covered by the gatk4/genomicsdbimport module's
+    // own `test_gatk4_genomicsdbimport_update_genomicsdb` nf-test (run_updatewspace = true),
+    // which validates the exact GATK command this subworkflow selects in update mode.
+    test("create-mode - build a fresh GenomicsDB (update path unset)") {
+
+        when {
+            params {
+                joint_germline_genomicsdb_update_path = null
+            }
+            workflow {
+                """
+                input[0] = Channel.of(
+                    [ [ id:'test1', num_intervals:1 ], file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/gatk/haplotypecaller_calls/test.g.vcf.gz',  checkIfExists: true), file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/gatk/haplotypecaller_calls/test.g.vcf.gz.tbi',  checkIfExists: true), file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/chr21/sequence/multi_intervals.bed', checkIfExists: true) ],
+                    [ [ id:'test2', num_intervals:1 ], file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/gatk/haplotypecaller_calls/test2.g.vcf.gz', checkIfExists: true), file(params.modules_testdata_base_path + 'genomics/homo_sapiens/illumina/gatk/haplotypecaller_calls/test2.g.vcf.gz.tbi', checkIfExists: true), file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/chr21/sequence/multi_intervals.bed', checkIfExists: true) ]
+                )
+                input[1]  = Channel.of([ [id:'genome'], file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/chr21/sequence/genome.fasta', checkIfExists: true) ])
+                input[2]  = Channel.of([ [id:'genome'], file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/chr21/sequence/genome.fasta.fai', checkIfExists: true) ])
+                input[3]  = Channel.of([ [id:'genome'], file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/chr21/sequence/genome.dict', checkIfExists: true) ])
+                input[4]  = Channel.of([])   // dbsnp (optional; no chr21 dbsnp in test-data)
+                input[5]  = Channel.of([])   // dbsnp_tbi
+                input[6]  = Channel.empty()  // dbsnp_vqsr
+                input[7]  = Channel.empty()  // resource_indels_vcf
+                input[8]  = Channel.empty()  // resource_indels_tbi
+                input[9]  = Channel.empty()  // known_indels_vqsr
+                input[10] = Channel.empty()  // resource_snps_vcf
+                input[11] = Channel.empty()  // resource_snps_tbi
+                input[12] = Channel.empty()  // known_snps_vqsr
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.out.genotype_vcf.size() == 1 },
+                { assert path(workflow.out.genotype_vcf.get(0).get(1)).exists() },
+                { assert snapshot(workflow.out.versions).match("create_versions") }
+            )
+        }
+    }
+}

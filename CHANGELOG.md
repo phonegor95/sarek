@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- [#755](https://github.com/nf-core/sarek/issues/755) - Publish the GATK joint-germline GenomicsDB workspaces (`variant_calling/haplotypecaller/genomicsdb/`) so they can seed incremental runs
+
 ### Fixed
 
 ### Removed

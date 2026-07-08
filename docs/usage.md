@@ -1413,6 +1413,8 @@ For GATK-based joint germline calling (`--joint_germline` with `--tools haplotyp
 
 Set `--joint_germline_genomicsdb_update_path` to the directory holding an existing per-interval GenomicsDB (one workspace per scatter interval, named `${intervals_name}.joint`, matching the publish layout produced by a previous joint-germline run). When set, `GATK4_GENOMICSDBIMPORT` runs in update mode (`--genomicsdb-update-workspace-path`) and appends only the new GVCFs; leave it unset for the default create-mode behavior. Enter the pipeline at `--step variant_calling` with the new sample's GVCF to add it to the cohort without recomputing the existing samples.
 
+The GenomicsDB workspaces from a joint-germline run are published to `<outdir>/variant_calling/haplotypecaller/genomicsdb/` (one `${intervals_name}.joint` directory per scatter interval); point `--joint_germline_genomicsdb_update_path` at that directory on the next run to grow the cohort.
+
 Sentieon's [GVCFtyper](https://support.sentieon.com/manual/usages/general/#gvcftyper-algorithm) does not support the [GenomicsDB](https://gatk.broadinstitute.org/hc/en-us/articles/5358869876891-GenomicsDBImport) datastore format. This means that, in contrast to the GATK based joint germline variant calling subworkflow in Sarek, the Sentieon/DNAseq based joint germline variant calling subworkflow does not use the GenomicsDB datastore format.
 
 ### QualCal (BQSR)
