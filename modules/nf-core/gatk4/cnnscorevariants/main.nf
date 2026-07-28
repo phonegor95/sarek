@@ -3,7 +3,13 @@ process GATK4_CNNSCOREVARIANTS {
     label 'process_low'
 
     //Conda is not supported at the moment: https://github.com/broadinstitute/gatk/issues/7811
-    container "nf-core/gatk:4.5.0.0" //Biocontainers is missing a package
+    // Stock declares `container "nf-core/gatk:4.5.0.0"`, a bare Docker-style
+    // reference Singularity cannot resolve — the task dies printing
+    // singularity usage text. Use the standard nf-core ternary so the
+    // singularity path gets a real depot.galaxyproject.org URL.
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/gatk4:4.5.0.0--py36hdfd78af_0' :
+        'broadinstitute/gatk:4.6.0.0' }"
 
     input:
     tuple val(meta), path(vcf), path(tbi), path(aligned_input), path(intervals)
