@@ -32,6 +32,11 @@ workflow BAM_JOINT_CALLING_GERMLINE_GATK {
 
     main:
 
+    // Leave this unset for the upstream create-mode behaviour. When set, each
+    // incoming interval is appended to <root>/<intervals_name>.joint in place.
+    def existing_genomicsdb_root = params.joint_germline_genomicsdb_update_path
+    def run_updatewspace = existing_genomicsdb_root ? true : false
+
     // Map input for GenomicsDBImport
     // Rename based on num_intervals, group all samples by their interval_name/interval_file and restructure for channel
     // Group by [0, 3] to avoid a list of metas and make sure that any intervals
@@ -40,13 +45,21 @@ workflow BAM_JOINT_CALLING_GERMLINE_GATK {
         .groupTuple(by:3) //join on interval file
         .map{ meta_list, gvcf, tbi, intervals ->
             // meta is now a list of [meta1, meta2] but they are all the same. So take the first element.
-            [ meta_list[0], gvcf, tbi, intervals, [], [] ]
+            def meta = meta_list[0]
+            def wspace = existing_genomicsdb_root
+                ? file("${existing_genomicsdb_root}/${meta.intervals_name}.joint", checkIfExists: true)
+                : []
+            [ meta, gvcf, tbi, intervals, [], wspace ]
         }
 
-    // Convert all sample vcfs into a genomicsdb workspace using genomicsdbimport
-    GATK4_GENOMICSDBIMPORT(gendb_input, false, false, false)
+    // Create fresh workspaces by default; update the supplied workspaces in place
+    // when joint_germline_genomicsdb_update_path is configured.
+    GATK4_GENOMICSDBIMPORT(gendb_input, false, run_updatewspace, false)
 
-    genotype_input = GATK4_GENOMICSDBIMPORT.out.genomicsdb.map{ meta, genomicsdb -> [ meta, genomicsdb, [], [], [] ] }
+    genomicsdb_for_genotype = run_updatewspace
+        ? GATK4_GENOMICSDBIMPORT.out.updatedb
+        : GATK4_GENOMICSDBIMPORT.out.genomicsdb
+    genotype_input = genomicsdb_for_genotype.map{ meta, genomicsdb -> [ meta, genomicsdb, [], [], [] ] }
 
     // Joint genotyping performed using GenotypeGVCFs
     // Sort vcfs called by interval within each VCF

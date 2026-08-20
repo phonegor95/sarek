@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.10.0](https://github.com/nf-core/sarek/releases/tag/3.10.0) - Aktse
 
+### GenDecoder fork
+
+- Add `--joint_germline_genomicsdb_update_path` to append new GVCFs to existing per-interval GenomicsDB workspaces for incremental joint germline calling.
+
 Aktse is a mountain hut on the northern shore of Laitaure, on the Kungsleden trail at the edge of Sarek National Park.
 
 ### Added

@@ -1422,6 +1422,8 @@ Sentieon's function `TNscope` can also be used by adding `--tools sentieon_tnsco
 
 ### Joint germline variant calling
 
+For GATK-based joint germline calling (`--joint_germline` with `--tools haplotypecaller`), Sarek normally creates a fresh GenomicsDB from the input GVCFs. This GenDecoder fork also supports a growing cohort: set `--joint_germline_genomicsdb_update_path` to an existing workspace root to append only the new GVCFs with `--genomicsdb-update-workspace-path`. The root must contain one directory per scatter interval named `<intervals_name>.joint`. Leave the parameter unset for stock create-mode behaviour. Because update mode modifies its input in place, callers should pass a private copy rather than a shared live baseline.
+
 Sentieon's [GVCFtyper](https://support.sentieon.com/manual/usages/general/#gvcftyper-algorithm) does not support the [GenomicsDB](https://gatk.broadinstitute.org/hc/en-us/articles/5358869876891-GenomicsDBImport) datastore format. This means that, in contrast to the GATK based joint germline variant calling subworkflow in Sarek, the Sentieon/DNAseq based joint germline variant calling subworkflow does not use the GenomicsDB datastore format.
 
 ### QualCal (BQSR)
